@@ -3,6 +3,8 @@
 #include <utility> // pair is in <utility> header
 using namespace std;
 
+const int INF = 10000000;
+
 pair<double, double > station[510];
 
 bool cmp(const pair<double, double> &a, const pair<double, double> &b) {
@@ -17,17 +19,17 @@ int main() {
     {
         scanf("%lf %lf", &station[i].first, &station[i].second);
     }
-    if (station[N].second == D)
-    {
-        station[N].first = 0;
+    // if (station[N].second == D)
+    // {
+    //     station[N].first = 0;
 
-    }
+    // }
 
     station[N+1].first = 0;
     station[N+1].second = D;
     
     // sort by the distance
-    sort(station + 1, station + N + 2, cmp);
+    sort(station + 1, station + N + 1, cmp);
     
     if (station[1].second != 0)
     {
@@ -36,64 +38,77 @@ int main() {
     }
 
     int sta_i = 1; // current station
-    int i_tmp;
+    double rad = Cm*Davg;
+    
     double ans = 0.0;
-    double sta_d = 0.0; // current distance
-    bool flag = false;
+    double cur_t = 0.0; // current distance
 
-    while (sta_d < D)
+    while (sta_i < N + 1)
     {
-        i_tmp = sta_i + 1;
-        double edge = station[sta_i].second + Cm*Davg;
-        while (station[i_tmp].second <= edge)
+        double minPrice = INF;
+        // double edge = station[sta_i].second + rad;
+        int k = -1; // record the index of the minPrice station
+        for (int i = sta_i +1; i <= N + 1 && station[i].second - station[sta_i].second<= rad; i++)
         {
-            
-            if (station[i_tmp].first < station[sta_i].first)
+            if (station[i].first < minPrice)
             {
-                flag = true;
-                // add cost
-                // come to the first station of which the gas is cheaper than the current station
-                ans += station[sta_i].first * (station[i_tmp].second - station[sta_i].second);
-                sta_i = i_tmp;
-                break;
-            }
-            i_tmp++;
-            
-        }
-        if (!flag)
-        {
-            // can't find the target station
-            // find the station which owns the cheapest gas within the current max reachable range
-            i_tmp = sta_i;
-            double min = 21.0;
-            while (station[i_tmp].second <= edge)
-            {
-                
-                if (station[i_tmp].first < min)
+                minPrice = station[i].first;
+                k = i;
+
+                if (minPrice < station[sta_i].first)
                 {
-                    min = station[i_tmp].first;
+                    // have found the first staion where the price is lower than current station
+                    break;
                 }
-                i_tmp++;
-            }
-            if (i_tmp == sta_i + 1)
-            {
-                // there is no such a station
-                double max_d = station[sta_i].second + Davg*Cm;
-            }
-            else
-            {
                 
             }
-            
-            
             
         }
         
+        if (k == -1)
+        {
+            break;
+            // can't find any fit station
+        }
+
+
+        // transition to the next found station
+        double need_gas = (station[k].second - station[sta_i].second)/Davg;
+        if (minPrice < station[sta_i].first)
+        {
+            // current stations transfer to the state1
+            
+            if (need_gas > cur_t)
+            {
+                ans += (need_gas - cur_t)*station[sta_i].first;
+                cur_t = 0;
+            }
+            else
+            {
+                cur_t -= need_gas; 
+            }
+
+            
+        }
+        else
+        {
+            ans += (Cm - cur_t)*station[sta_i].first;;
+            cur_t = Cm - need_gas; 
+        }
+        // come to station k
+        sta_i = k;
         
         
     }
     
-    
+    if (sta_i == N + 1)
+    {
+        printf("%.2f", ans);
+    }
+    else
+    {
+        printf("The maximum travel distance = %.2f", station[sta_i].second + rad);
+    }
     
     return 0;
 }
